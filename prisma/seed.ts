@@ -38,13 +38,13 @@ const products: Array<{
     categorySlug: "stationery",
   },
   {
-    name: "Parker Ballpoint Pen (Pack of 5)",
+    name: "Parker Ballpoint Pen",
     slug: "parker-ballpoint-pens",
     description: "Smooth-writing blue ballpoint pens, perfect for exams.",
     price: 60,
     mrp: 100,
     imageUrl:
-      "https://m.media-amazon.com/images/I/51Ix9kxWZ9L._SL1500_.jpg",
+      "/assets/parker-pen.jpeg",
     stock: 80,
     featured: false,
     rating: 4.2,
@@ -70,7 +70,7 @@ const products: Array<{
     price: 40,
     mrp: 75,
     imageUrl:
-      "https://m.media-amazon.com/images/I/71w7cZVG5sL._SL1500_.jpg",
+      "/assets/kurkure.jpeg",
     stock: 150,
     featured: false,
     rating: 4.3,
@@ -122,7 +122,7 @@ const products: Array<{
     price: 349,
     mrp: 799,
     imageUrl:
-      "https://m.media-amazon.com/images/I/61iYYE5UJ7L._SL1500_.jpg",
+      "/assets/USB-cable-with-charger.jpeg",
     stock: 40,
     featured: false,
     rating: 4.1,
@@ -135,7 +135,7 @@ const products: Array<{
     price: 199,
     mrp: 399,
     imageUrl:
-      "https://m.media-amazon.com/images/I/61p-PcxIfjL._SL1500_.jpg",
+      "/assets/bottles.jpeg",
     stock: 70,
     featured: false,
     rating: 4.4,
