@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  VENDOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CONFIRMED
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  phone         String?
+  roomNo        String?
+  hostel        String?
+  role          Role      @default(STUDENT)
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  carts         Cart[]
+  orders        Order[]
+  ownedVendors  Vendor[]
+  groupOrders   GroupOrderMember[]
+  createdGroups GroupOrder[]
+
+  @@index([email])
+}
+
+model Vendor {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  verified    Boolean  @default(false)
+  emoji       String   @default("🏪")
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  products    Product[]
+  createdAt   DateTime @default(now())
+}
+
+model Category {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  slug  String    @unique
+  emoji String    @default("📦")
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Int
+  mrp         Int?
+  imageUrl    String
+  stock       Int      @default(10)
+  featured    Boolean  @default(false)
+  rating      Float    @default(0)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  vendorId    String?
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
+  createdAt   DateTime @default(now())
+
+  cartItems CartItem[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id])
+  shareCode String     @unique @default(cuid())
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@unique([cartId, productId])
+}
+
+model DeliveryZone {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  lat         Float
+  lng         Float
+  radiusKm    Float    @default(1)
+  orders      Order[]
+}
+
+model Order {
+  id               String         @id @default(cuid())
+  orderNumber      Int            @unique @default(autoincrement())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
+  status           OrderStatus    @default(PENDING)
+  paymentStatus    PaymentStatus  @default(CREATED)
+  total            Int
+  itemsTotal       Int
+  deliveryFee      Int            @default(0)
+  addressLine      String
+  hostel           String?
+  roomNo           String?
+  scheduledSlot    String?
+  zoneId           String?
+  zone             DeliveryZone?  @relation(fields: [zoneId], references: [id])
+  razorpayOrderId  String?        @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+  courierLat       Float          @default(0)
+  courierLng       Float          @default(0)
+  createdAt        DateTime       @default(now())
+  deliveredAt      DateTime?
+
+  items    OrderItem[]
+  tracking TrackingEvent[]
+  group    GroupOrder?
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  price     Int
+  quantity  Int
+  imageUrl  String
+}
+
+enum TrackingType {
+  PLACED
+  PAID
+  CONFIRMED
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+}
+
+model TrackingEvent {
+  id        String       @id @default(cuid())
+  orderId   String
+  order     Order        @relation(fields: [orderId], references: [id])
+  type      TrackingType
+  note      String
+  lat       Float?
+  lng       Float?
+  createdAt DateTime     @default(now())
+
+  @@index([orderId])
+}
+
+model GroupOrder {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  order       Order    @relation(fields: [orderId], references: [id])
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  shareCode   String   @unique @default(cuid())
+  splitMethod String   @default("EQUAL")
+  createdAt   DateTime @default(now())
+  members     GroupOrderMember[]
+}
+
+model GroupOrderMember {
+  id           String     @id @default(cuid())
+  groupOrderId String
+  groupOrder   GroupOrder @relation(fields: [groupOrderId], references: [id])
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  amount       Int
+  paid         Boolean    @default(false)
+
+  @@unique([groupOrderId, userId])
+}
